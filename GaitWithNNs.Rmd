@@ -1,6 +1,6 @@
-# Does some nice multiplotting
-# Doesn't use R to do neural networks, that was done in Neuroph
-# This is just a report. With nice plotting :D
+Does some nice multiplotting
+Doesn't use R to do neural networks, that was done in Neuroph
+This is just a report. With nice plotting :D
 
 ---
 title: "Vestačke neuronske mreže u ranoj dijagnostici Parkinsonove bolesti"
