@@ -1,0 +1,223 @@
+# Does some nice multiplotting
+# Doesn't use R to do neural networks, that was done in Neuroph
+# This is just a report. With nice plotting :D
+
+---
+title: "Vestačke neuronske mreže u ranoj dijagnostici Parkinsonove bolesti"
+author: "Minja Belić"
+date: "December 31, 2015"
+output: pdf_document
+---
+
+# Apstrakt
+
+Ovaj rad se bavi klasifikacijom podataka o hodu primenom veštačkih neuronskih mreža. Dobijena je tačnost klasifikacije od 87,5%. Klasifikacija vršena upotrebom sirovih podataka dala je bolje rezultate nego podaci pretprocesirani putem analize glavnih komponenti (PCA). 
+
+# Podaci
+
+Podaci su prikupljenih od 40 pacijenata obolelih od Parkinsonove bolesti u pocetnom stadijumu, kao i od 40 zdravih kontrola uparenih po godinama starosti, pomocu prenosivog sistema za automatsko merenje prostorno-vremenskih parametara hoda, GaitRITE.
+
+# Metode
+
+Klasifikacija je izvrsena pomocu opensource softverskog paketa Neuroph, specijalizovanog za modeliranje vestackih neuronskih mreza. Dodatne analize i crtanje grafika obavljeno je u programskom jeziku R. 
+
+Podaci sadrze 24 parametra hoda, kao i kolonu koja oznacava dijagnozu.
+Dimenzije i nazivi parametara:
+
+```{r,echo=F,message=F,warning=F,fig.width=10,fig.height=16}
+library(dplyr)
+library(ggplot2)
+library(grid)
+library(caret)
+
+# Read data (GaitRite data for 40 PD patients and 40 controls)
+Data<-read.csv("!PrepakovaniSVIfinal.csv")
+
+# Keep only the desired variables
+# The variables were selected using the correlation based approach, 
+# as well as the random forest variable importance feature
+Ubaciti<-c("Step.Time.Differential.Motor",
+           "Step.Time.Differential.Mental",
+           "Step.Time.Differential.Base",
+           "Supp.Base.On.Std.Dev..Motor",
+           "Supp.Base.On.Std.Dev..Mental",
+           "Supp.Base.On.Std.Dev..Base",
+           "Stride.Velocity.Std.Dev..Mental",
+           "Stride.Velocity.Std.Dev..Base",
+           "Stride.Velocity.Std.Dev..Motor",
+           "Cycle.Time.Differential.Base",
+           "Cycle.Time.Differential.Motor",
+           "Cycle.Time.Differential.Mental",
+           "Stride.Length.Std.Dev..Motor",
+           "Stride.Length.Std.Dev..Base",
+           "Stride.Length.Std.Dev..Mental",
+           "Single.Supp..Time.sec...Motor",
+           "Single.Supp..Time.sec...Mental",
+           "Single.Supp..Time.sec...Base",
+           "Stride.Time.Std.Dev..Motor",
+           "Stride.Time.Std.Dev..Mental",
+           "Stride.Time.Std.Dev..Base",
+           "Single.Supp.Time.Std.Dev..Mental",
+           "Single.Supp.Time.Std.Dev..Motor",
+           "Single.Supp.Time.Std.Dev..Base",
+           "dijagnoza")
+
+Data<-Data[,which(names(Data) %in% Ubaciti)]
+# kako izgledaju podaci
+dim(Data)
+names(Data)
+
+## grafici
+#######
+multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
+  require(grid)
+  
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  if (is.null(layout)) {
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots == 1) {
+    print(plots[[1]])
+    
+  } else {
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    for (i in 1:numPlots) {
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+
+#####
+
+## podeli u base/mot/mental, preuredi
+B<-rep("Base",80)
+Mot<-rep("Motor",80)
+Ment<-rep("Mental",80)
+Base<-data.frame(Data[,c(1:8,25)],B)
+Motor<-data.frame(Data[,c(9:16,25)],Mot)
+Mental<-data.frame(Data[,17:25],Ment)
+
+names<-c("Step.Time.Differential",
+         "Cycle.Time.Differential",
+         "Single.Support.Time",
+         "Stride.Length.STD",
+         "Stride.Time.STD",
+         "Stride.Velocity.STD",
+         "Single.Support.Time.STD",
+         "Supp.Base.On.STD",
+         "Diagnosis",
+         "Task")
+
+names(Base)<-names
+names(Motor)<-names
+names(Mental)<-names
+
+DataNew<-as.data.frame(rbind(Base,Motor,Mental))
+
+###########################
+# Step Time Differential
+g1<-ggplot(data=DataNew,aes(Diagnosis,Step.Time.Differential))+
+  geom_boxplot(aes(fill=Diagnosis))+scale_fill_brewer(palette="OrRd")
+g1<-g1+facet_grid(.~Task)+
+  theme(axis.title.x=element_blank(),axis.title.y=element_blank(),legend.position=c(.1, .75))+
+  ggtitle("Step Time Differential [s]")+ylim(0,0.10)
+
+# Cycle Time Differential
+g2<-ggplot(data=DataNew,aes(Diagnosis,Cycle.Time.Differential))+
+  geom_boxplot(aes(fill=Diagnosis))+scale_fill_brewer(palette="OrRd")
+g2<-g2+facet_grid(.~Task)+theme(axis.title.x=element_blank(),axis.title.y=element_blank())+
+  ggtitle("Stride Time Differential [s]")+guides(fill=FALSE)+ylim(0,0.04)
+
+# Single Support Time
+g3<-ggplot(data=DataNew,aes(Diagnosis,Single.Support.Time))+
+  geom_boxplot(aes(fill=Diagnosis))+scale_fill_brewer(palette="OrRd")
+g3<-g3+facet_grid(.~Task)+theme(axis.title.x=element_blank(),axis.title.y=element_blank())+
+  ggtitle("Swing Time [s]")+guides(fill=FALSE)
+
+#Stride Length STD
+g4<-ggplot(data=DataNew,aes(Diagnosis,Stride.Length.STD))+
+  geom_boxplot(aes(fill=Diagnosis))+scale_fill_brewer(palette="OrRd")
+g4<-g4+facet_grid(.~Task)+theme(axis.title.x=element_blank(),axis.title.y=element_blank())+
+  ggtitle("Stride Length St.Dev.[cm]")+guides(fill=FALSE)
+
+# Stride Time STD
+g5<-ggplot(data=DataNew,aes(Diagnosis,Stride.Time.STD))+
+  geom_boxplot(aes(fill=Diagnosis))+scale_fill_brewer(palette="OrRd")
+g5<-g5+facet_grid(.~Task)+theme(axis.title.x=element_blank(),axis.title.y=element_blank())+
+  ggtitle("Stride Time St.Dev.[s]")+guides(fill=FALSE)+ylim(0,0.15)
+
+# Stide Velocity STD
+g6<-ggplot(data=DataNew,aes(Diagnosis,Stride.Velocity.STD))+
+  geom_boxplot(aes(fill=Diagnosis))+scale_fill_brewer(palette="OrRd")
+g6<-g6+facet_grid(.~Task)+theme(axis.title.x=element_blank(),axis.title.y=element_blank())+
+  ggtitle("Stide Velocity St.Dev.[cm/s]")+guides(fill=FALSE)
+
+# Swing Time STD
+g7<-ggplot(data=DataNew,aes(Diagnosis,Single.Support.Time.STD))+
+  geom_boxplot(aes(fill=Diagnosis))+scale_fill_brewer(palette="OrRd")
+g7<-g7+facet_grid(.~Task)+theme(axis.title.x=element_blank(),axis.title.y=element_blank())+
+  ggtitle("Swing Time St.Dev.[s]")+guides(fill=FALSE)
+
+# Supp Base ON STD
+g8<-ggplot(data=DataNew,aes(Diagnosis,Supp.Base.On.STD))+
+  geom_boxplot(aes(fill=Diagnosis))+scale_fill_brewer(palette="OrRd")
+g8<-g8+facet_grid(.~Task)+theme(axis.title.x=element_blank(),axis.title.y=element_blank())+
+  ggtitle("Support Base On St.Dev.[cm]")+guides(fill=FALSE)
+
+ multiplot(g1,g2,g3,g4,g5,g6,g7,g8,cols=2)
+
+
+# 10 folds
+k<-10
+set.seed(123123)
+folds<-createFolds(Data$dijagnoza,k,returnTrain=F)
+```
+
+Nad podacima je obavljena je analiza glavnih komponenti (PCA) i prve (najznacajnije) dve komponente su prikazane na grafiku ispod. Prema tabeli ispod, vidimo da je 14 komponenti dovoljno za opisivanje oko 95% varijanse (kumulativni udeo).
+
+```{r,echo=F,message=F,warning=F,fig.align="center"}
+# PCA on all data
+p<-prcomp(Data[,-ncol(Data)],scale=T,center=T,retx=T)
+
+summary(p)
+Diagnosis=Data$dijagnoza
+qplot(p$x[,1],p$x[,2],color=Diagnosis,xlab="PC1",ylab = "PC2",main= "Principal Component Analysis rotated data")
+
+```
+
+## Neuronske mreze  
+
+Ulazni sloj neuronske mreže sadržao je 24 neurona (+ bias neuron) za sirove podatke i 16 (+1) za PCA pretprocesirane podatke.
+Vodeci se pravilom broj skrivenih neurona=broj ulaza + broj izlaza +1, prvi izbor broja neurona u skrivenim slojevima bio je 26, odnosno 16 neurona,a zatim je taj broj variran da bi se ustanovio optimalan broj. Heuristicki su odredjene i prenosna funkcija, metod učenja i funkcija prenosa, kao i broj skrivenih slojeva.
+
+# Rezultati
+
+Rezultati klasifikacije primenom neuronskih mreža sa različitim parametrima prikazan je na slici ispod. 
+
+![](C:\Users\TECNALIA2014BELI\Desktop\Minjino\kojesta\neurophstudio\GaitRite\ClassificationError.jpeg)  
+
+Numerički podaci mogu se naći u priloženom dokumentu NeurophResults.csv.
+Tačnost klasifikacije vršene nad PCA procesiranim podacima ne menja se značajno sa promenom broja neurona u sloju, niti broja skrivenih slojeva, dok povećanje broja neurona i slojeva u velikom delu negativno utiče na tačnost klasifikacije sa sirovim podacima. Promena momenta i maksimalne greske pri ucenju su u manjoj meri uticali na tačnost klasifikacije.
+
+Parametri koji su dali najbolji rezultat (tačnost klasifikacije od 87.5%) jesu sledeći:
+-Sirovi podaci
+-Multilayer perceptron sa 1 skrivenim slojem od 16 neurona
+-Resillient Propagation learning
+-Sigmoid transfer function
+-Momentum 0.8
+
+
+# Zakljucak
+
+U ovom radu ispitivana je mogućnost rane dijagnostike parkinsonove bolesti na osnovu podataka o hodu.Klasifikacija na zdrave i bolesne pomoću neuronskih mreža u open source paketu Neuroph dala je tačnost klasifikacije od 87.5%. 
