@@ -1,0 +1,117 @@
+---
+title: "ProjectAssignment"
+author: "MBelic"
+date: "August 23, 2016"
+output: word_document
+---
+
+Artificial intelligence
+
+
+Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset). 
+
+Assignment goal
+
+The goal of this assignment to use a machine learning algorithm in order to predict how the excercise was done, according to the predictor variables of the given data. The class variable takes values of A (properly done excercise) or B,C,D,E (a mode of incorrectly done excercise). 
+
+```{r,echo=F,warning=F,message=F}
+library(class)
+library(e1071)
+library(caret)
+library(kernlab)
+
+# Set working directory
+setwd("D:/c0ursera/machine learning/kodovi")
+```
+
+Let's start by reading the data.
+
+```{r,warning=F,message=F}
+#Read data
+Data<-read.csv("pml-training.csv",header=TRUE)
+dim(Data)
+names(Data)
+```
+
+Since the first 7 variables seem to of descriptive character, not of interest in the process of prediction, we will remove those.
+If we take a look at the data using head(Data), we will notice a lot of variables contain a large number of missing values. We will remove those, setting the cutoff at 70%. (i.e. those predictors that have more than 70% of na instances will not be included in the model)
+
+```{r,warning=F,message=F}
+#remove the first 7 descriptive variables
+out7<-1:7
+Data<-Data[,-out7]
+# remove too sparse columns 
+p70<-nrow(Data)*0.7
+how.na<-sapply(Data,FUN=function(x){sum(is.na(x))})
+outSparse<-which(how.na>p70)
+Data<-Data[,-outSparse]
+```
+
+Then, we will remove the columns with the least standard deviation.
+
+```{r}
+# find deviations
+sdevs<-sapply(Data[,-ncol(Data)],sd,na.rm=TRUE)
+
+# remove columns with the smallest standard deviation
+outSD<-which(sdevs<1)
+Data<-Data[,-outSD]
+```
+
+It is possible that some variables are redundant, we will remove those with mutual correlation above 0.95.
+
+```{r,warning=F,message=F}
+# remove mutually highly correlated variables
+Data<-as.data.frame(sapply(Data,as.numeric))
+cormat<-cor(Data[,-ncol(Data)])
+outCor = findCorrelation(cormat, cutoff = 0.95)
+Data<-Data[,-outCor]
+Data$classe<-as.factor(Data$classe)
+dim(Data)
+```
+
+This leaves us with 60 predictors.
+Then let us partition the data into a training and test set.
+
+```{r,warning=F,message=F}
+# Partition data into training and testing sets (70/30)
+set.seed(123)
+inTrain<-createDataPartition(y=Data$classe,p=0.70,list=FALSE)
+training<-Data[inTrain,]
+test<-Data[-inTrain,]
+```
+
+And then fit the model, using Gradient Boosting Machine.
+
+```{r,warning=F,message=F,eval=F}
+# control training by repeated crossvalidation
+fitControl <- trainControl(## 3-fold CV
+  method = "repeatedcv",
+  number = 3,
+  ## repeated 5 times
+  repeats = 5)
+
+# fit a model,preprocess with PCA
+model<-train(classe~.,data=training,method="gbm", trControl=fitControl,verbose=F)
+
+```
+
+```{r,echo=F}
+testfit<-read.csv("testfit.csv")
+```
+Then we predict the outcome of the test data based on the just fitted model.
+
+```{r,warning=F,message=F}
+# test the model with the 30% of data for testing
+
+cm<-confusionMatrix(testfit[,-1],test$classe)
+print(cm)
+```
+
+
+
+This gives us the predicted out of sample accuracy of 94.78%. 
+
+
