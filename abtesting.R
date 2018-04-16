@@ -24,12 +24,11 @@ df$MTR[which(is.na(df$MTR))]<-temp[which(is.na(df$MTR))]
 
 # plot
 MTR<-ggplot(df)+
-  geom_boxplot(aes(df$Mjerenje.I.T.F,df$MTR,fill=df$Mjerenje.I.T.F.))+
-  geom_point(aes(df$Mjerenje.I.T.F,df$MTR,alpha=0.7))+
-  facet_grid(SportGrupa~Tezinska.grupa)+
+  geom_boxplot(aes(df$SportGrupa,df$MTR,fill=df$SportGrupa))+
+ 
   ggtitle("MTR")+
   scale_fill_manual(values = c("#ffeda0","#feb24c","#f03b20"))+
-  xlab("Mjerenje")+
+  xlab("Sportska grupa")+
   ylab("MTR")
 
 ######################## MDS #############
@@ -43,12 +42,11 @@ df$MDS[which(is.na(df$MDS))]<-temp[which(is.na(df$MDS))]
 
 # plot
 MDS<-ggplot(df)+
-  geom_boxplot(aes(df$Mjerenje.I.T.F,df$MDS,fill=df$Mjerenje.I.T.F.))+
-  geom_point(aes(df$Mjerenje.I.T.F,df$MDS,alpha=0.7))+
-  facet_grid(SportGrupa~Tezinska.grupa)+
+  geom_boxplot(aes(df$SportGrupa,df$MDS,fill=df$SportGrupa))+
+  facet_grid(.~Tezinska.grupa)+
   ggtitle("MDS")+
   scale_fill_manual(values = c("#ffeda0","#feb24c","#f03b20"))+
-  xlab("Mjerenje")+
+  
   ylab("MDS")
 
 
@@ -64,11 +62,11 @@ df$MPN[which(is.na(df$MPN))]<-temp[which(is.na(df$MPN))]
 
 # plot
 MPN<-ggplot(df)+ #mpn ima neke outliere koji kvare plot
-  geom_boxplot(aes(df$Mjerenje.I.T.F,df$MPN,fill=df$Mjerenje.I.T.F.))+
-  geom_point(aes(df$Mjerenje.I.T.F,df$MPN,alpha=0.7))+
-  facet_grid(SportGrupa~Tezinska.grupa)+
+  geom_boxplot(aes(df$Tezinska.grupa,df$MPN,fill=df$Tezinska.grupa))+
+  
+  
   ylim(0,40)+
-  xlab("Mjerenje")+
+
   ylab("MPN")+
   ggtitle("MPN")+
   scale_fill_manual(values = c("#ffeda0","#feb24c","#f03b20"))
@@ -83,12 +81,10 @@ df$MPT[which(is.na(df$MPT))]<-temp[which(is.na(df$MPT))]
 
 # plot
 MPT<-ggplot(df)+ 
-  geom_boxplot(aes(df$Mjerenje.I.T.F,df$MPT,fill=df$Mjerenje.I.T.F.))+
-  geom_point(aes(df$Mjerenje.I.T.F,df$MPT,alpha=0.7))+
-  facet_grid(SportGrupa~Tezinska.grupa)+
+  geom_boxplot(aes(df$SportGrupa,df$MPT,fill=df$Tezinska.grupa))+
   ggtitle("MPT")+
-  xlab("Mjerenje")+
   ylab("MPT")+
+  xlab("")+
   scale_fill_manual(values = c("#ffeda0","#feb24c","#f03b20"))
 
   
@@ -102,11 +98,9 @@ df$MPR[which(is.na(df$MPR))]<-temp[which(is.na(df$MPR))]
 
 # plot
 MPR<-ggplot(df)+ 
-  geom_boxplot(aes(df$Mjerenje.I.T.F,df$MPR,fill=df$Mjerenje.I.T.F.))+
-  geom_point(aes(df$Mjerenje.I.T.F,df$MPR,alpha=0.7))+
-  facet_grid(SportGrupa~Tezinska.grupa)+
+  geom_boxplot(aes(df$SportGrupa,df$MPR))+
   ggtitle("MPR")+
-  xlab("Mjerenje")+
+
   ylab("MPR")+
   scale_fill_manual(values = c("#ffeda0","#feb24c","#f03b20"))
 
@@ -139,12 +133,12 @@ df$F6[which(is.na(df$F6))]<-temp[which(is.na(df$F6))]
 
 # plot
 F6<-ggplot(df)+ #mpn ima neke outliere koji kvare plot
-  geom_boxplot(aes(df$Mjerenje.I.T.F,df$F6,fill=df$Mjerenje.I.T.F.))+
-  geom_point(aes(df$Mjerenje.I.T.F,df$F6,alpha=0.7))+
+  geom_boxplot(aes(df$SportGrupa,df$F6,fill=df$Tezinska.grupa))+
+  
   scale_fill_manual(values = c("#ffeda0","#feb24c","#f03b20"))+
-  facet_grid(SportGrupa~Tezinska.grupa)+
+ 
   ggtitle("F6")+
-  xlab("Merenje")+
+  xlab("")+
   ylab("F6")
 
 #################### ITM ###########
@@ -199,3 +193,23 @@ g<-ggplot(df)+geom_point(aes(ITM,F6))+
 ITMsport<-aov(ITM~SportGrupa,data=df)
 summary(ITMsport)
 ITMsportT<-pairwise.t.test(df$ITM,df$SportGrupa,p.adjust.method = "bonferroni")
+
+# MTR dalje analize
+# Df Sum Sq Mean Sq F value   Pr(>F)    
+# SportGrupa                                  2    127   63.59   4.330  0.01377 *  
+#   Tezinska.grupa                              2     33   16.47   1.122  0.32668    
+# Mjerenje.I.T.F.                             2    352  176.18  11.997 8.63e-06 ***
+#   SportGrupa:Tezinska.grupa                   4    199   49.67   3.383  0.00971 ** 
+#   SportGrupa:Mjerenje.I.T.F.                  4      7    1.67   0.114  0.97760    
+# Tezinska.grupa:Mjerenje.I.T.F.              4     15    3.63   0.247  0.91117    
+# SportGrupa:Tezinska.grupa:Mjerenje.I.T.F.   8     25    3.16   0.215  0.98817    
+# Residuals                                 411   6035   14.68 
+MTRsportTezina<-df%>%group_by(SportGrupa,Tezinska.grupa)%>%summarize(srMTR=mean(MTR))
+
+MDSttest<-pairwise.t.test(df$MDS,df$SportGrupa)
+MDSsportTezina<-df%>%group_by(SportGrupa,Tezinska.grupa)%>%summarize(srMDS=mean(MDS))
+
+MPNTezina<-df%>%group_by(Tezinska.grupa,Mjerenje.I.T.F.)%>%summarize(srMPN=mean(MPN))
+
+MIVTezina<-df%>%group_by(Tezinska.grupa,SportGrupa)%>%summarize(srMIV=mean(MIV))
+F6Tezina<-df%>%group_by(SportGrupa)%>%summarize(srF6=mean(F6))
