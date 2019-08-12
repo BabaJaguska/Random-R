@@ -4,6 +4,7 @@ library(dplyr)
 library(psych)
 library(ggplot2)
 library(reshape2)
+library(RColorBrewer)
 
 setwd('D:/hrvaci/')
 df<-read.table('HrvanjeTabelaSVI.csv', sep = ',', header = TRUE, colClasses = 'character')
@@ -20,13 +21,15 @@ fixComma<-function(str){
 quantify<-function(str){
   
   posDigit<-regexpr('[0-9]',str)
-  return(substr(str,posDigit,posDigit))
+  s<-paste(substr(str,posDigit,posDigit),'-',substr(str,1,posDigit-2))
+  return(s)
   
 }
 
 for (i  in 11:82){
-  df[,i]<-as.numeric(sapply(df[,i],quantify))
+  df[,i]<-sapply(df[,i],quantify)
 }
+
 for (i in c(1,5)){
   df[,i]<-sapply(df[,i],fixComma)
 }
@@ -78,7 +81,16 @@ levels(t$Starosna.skupina)<-c("11 do 13 godina","14 i 15 godina", "16 i 17 godin
 a<-hist(df$Koliko.Vam.je.zabavno.bavljenje.vasim.sportom.,breaks = b)
 gZabavno <-ggplot(data=t)+geom_bar(aes(NivoZabave,RelativnaFrekvencija,fill=Spol), position='dodge',stat='identity')+
                   facet_grid(.~Starosna.skupina)+
-                  ggtitle('Koliko ispitnici pronalaze zabavu u svom sportu prema spolu i starosnoj dobi')
+                  ggtitle('Koliko ispitnici pronalaze zabavu u svom sportu prema spolu i starosnoj dobi')+
+  theme(#axis.ticks.x=element_blank(),
+    axis.text = element_text(size=15,angle = 60),
+    strip.text = element_text(size=16),
+    plot.title=element_text(size=16),
+    legend.text = element_text(size=15),
+    legend.title = element_text(size=15))+
+  xlab('')+
+  guides(colour = guide_legend(override.aes = list(size=7)),
+         shape = guide_legend(override.aes = list(size=5)))
 gZabavno
 
 
@@ -102,7 +114,16 @@ levels(tPonos$Starosna.skupina)<-c("11 do 13 godina","14 i 15 godina", "16 i 17 
 a<-hist(df$Koliko.se.ponosis.kada.drugima.govoris.da.treniras.ovaj.sport.,breaks = b)
 gPonos <-ggplot(data=tPonos)+geom_bar(aes(NivoPonosa,RelativnaFrekvencija,fill=Spol), position='dodge',stat='identity')+
   facet_grid(.~Starosna.skupina)+
-  ggtitle('Koliko se ispitnici ponose svojim sportom prema spolu i starosnoj dobi')
+  xlab('')+
+  ggtitle('Koliko se ispitnici ponose svojim sportom prema spolu i starosnoj dobi')+
+  theme(#axis.ticks.x=element_blank(),
+    axis.text = element_text(size=15,angle = 60),
+    strip.text = element_text(size=16),
+    plot.title=element_text(size=16),
+    legend.text = element_text(size=15),
+    legend.title = element_text(size=15))+
+  guides(colour = guide_legend(override.aes = list(size=7)),
+         shape = guide_legend(override.aes = list(size=5)))
 gPonos
 
 ####### KOLIKO SI PREDAN TRENIRANJU?
@@ -124,7 +145,16 @@ levels(tPredan$Starosna.skupina)<-c("11 do 13 godina","14 i 15 godina", "16 i 17
 
 gPredan <-ggplot(data=tPredan)+geom_bar(aes(NivoPredana,RelativnaFrekvencija,fill=Spol), position='dodge',stat='identity')+
   facet_grid(.~Starosna.skupina)+
-  ggtitle('Koliko su ispitanici predani svom sportu prema spolu i starosnoj dobi')
+  xlab('')+
+  ggtitle('Koliko su ispitanici predani svom sportu prema spolu i starosnoj dobi')+
+  theme(#axis.ticks.x=element_blank(),
+    axis.text = element_text(size=15,angle = 60),
+    strip.text = element_text(size=16),
+    plot.title=element_text(size=16),
+    legend.text = element_text(size=15),
+    legend.title = element_text(size=15))+
+  guides(colour = guide_legend(override.aes = list(size=7)),
+         shape = guide_legend(override.aes = list(size=5)))
 gPredan
 
 ##### Nastaviti trenirati
@@ -146,7 +176,16 @@ levels(tZeliNastaviti$Starosna.skupina)<-c("11 do 13 godina","14 i 15 godina", "
 
 gZeliNastaviti <-ggplot(data=tZeliNastaviti)+geom_bar(aes(NivoZeliNastavitia,RelativnaFrekvencija,fill=Spol), position='dodge',stat='identity')+
   facet_grid(.~Starosna.skupina)+
-  ggtitle('Koliko ispitanici zele nastavitii da se bave sportom prema spolu i starosnoj dobi')
+  xlab('')+
+  ggtitle('Koliko ispitanici zele nastavitii da se bave sportom prema spolu i starosnoj dobi')+
+  theme(#axis.ticks.x=element_blank(),
+    axis.text = element_text(size=15,angle = 60),
+    strip.text = element_text(size=16),
+    plot.title=element_text(size=16),
+    legend.text = element_text(size=15),
+    legend.title = element_text(size=15))+
+  guides(colour = guide_legend(override.aes = list(size=7)),
+         shape = guide_legend(override.aes = list(size=5)))
 gZeliNastaviti
 
 ################ Odlucan da nastavi
@@ -167,7 +206,16 @@ levels(tOdlucanDaNastavi$Starosna.skupina)<-c("11 do 13 godina","14 i 15 godina"
 
 gOdlucanDaNastavi <-ggplot(data=tOdlucanDaNastavi)+geom_bar(aes(NivoOdlucanDaNastavia,RelativnaFrekvencija,fill=Spol), position='dodge',stat='identity')+
   facet_grid(.~Starosna.skupina)+
-  ggtitle('Koliko su ispitanici OdlucanDaNastavii svom sportu prema spolu i starosnoj dobi')
+  xlab('')+
+  ggtitle('Koliko su ispitanici odlucni da nastave da se bave sportom prema spolu i starosnoj dobi')+
+  theme(#axis.ticks.x=element_blank(),
+    axis.text = element_text(size=15,angle = 60),
+    strip.text = element_text(size=16),
+    plot.title=element_text(size=16),
+    legend.text = element_text(size=15),
+    legend.title = element_text(size=15))+
+  guides(colour = guide_legend(override.aes = list(size=7)),
+         shape = guide_legend(override.aes = list(size=5)))
 gOdlucanDaNastavi
 
 ##### Koliko bi bilo tesko prestati da treniras
@@ -188,5 +236,25 @@ levels(tBiloBiTesko$Starosna.skupina)<-c("11 do 13 godina","14 i 15 godina", "16
 
 gBiloBiTesko <-ggplot(data=tBiloBiTesko)+geom_bar(aes(NivoBiloBiTeskoa,RelativnaFrekvencija,fill=Spol), position='dodge',stat='identity')+
   facet_grid(.~Starosna.skupina)+
-  ggtitle('Koliko su ispitanici BiloBiTeskoi svom sportu prema spolu i starosnoj dobi')
+  ggtitle('Koliko ispitanici smatraju da bi im bilo tesko da napuste sport prema spolu i starosnoj dobi')+
+  xlab('')+
+  theme(#axis.ticks.x=element_blank(),
+        axis.text = element_text(size=15,angle = 60),
+        strip.text = element_text(size=16),
+        plot.title=element_text(size=16),
+        legend.text = element_text(size=15),
+        legend.title = element_text(size=15))+
+  guides(colour = guide_legend(override.aes = list(size=7)),
+         shape = guide_legend(override.aes = list(size=5)))
+  
 gBiloBiTesko
+
+# svi ukupno koliko bi tesko bilo
+ttempBiloBiTeskoSvi<-as.data.frame(table(df$Koliko.bi.ti.tesko.bilo.prestati.trenirati.ovaj.sport.))
+piepercent<-as.character(round(ttempBiloBiTeskoSvi$Freq*100/sum(ttempBiloBiTeskoSvi$Freq),2))
+piepercent<-paste(piepercent,'%')
+pie(ttempBiloBiTeskoSvi$Freq, labels = piepercent,col=brewer.pal(5,"PiYG"))
+legend("topleft",c('nimalo','malo','osrednje','jako','izrazito jako'),cex=1,fill=brewer.pal(5,"PiYG"))
+title('Koliko bi vam bilo tesko da napustite ovaj sport?')
+
+
